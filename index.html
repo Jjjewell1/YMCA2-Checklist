@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YMCA Packing Checklist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Design Variables (Palette) --- */
+        :root {
+            --deep-teal: #0B5D5B; /* Headers/Primary */
+            --mid-teal: #17A398; /* Accents */
+            --light-aqua: #EAF7F4; /* Light aqua background wash */
+            --warm-sand: #FBF1DE; /* Main body background */
+            --coral: #FF6F5E; /* Checked state / Primary buttons */
+            --golden-yellow: #F4B740; /* Highlights */
+        }
+
+        /* --- Global Styles & Typography --- */
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--warm-sand);
+            color: #333;
+            margin: 0;
+            padding-bottom: 60px; /* Space for bottom tab bar */
+        }
+
+        h1, h2, .header-title {
+            font-family: 'Baloo 2', cursive;
+            color: var(--deep-teal);
+            margin: 0;
+        }
+
+        /* --- Layout Components --- */
+        .app-container {
+            max-width: 600px; /* Mobile-first width constraint */
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        /* Decorative Wave SVG */
+        .wave-svg {
+            display: block;
+            width: 100%;
+            height: 80px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Cpath fill='%23EAF7F4' fill-opacity='1' d='M0,1 L1,1 L1,.5 Q.5,.3 0,1 Z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+        }
+
+        /* --- Header & Date Picker Area --- */
+        .header {
+            background-color: var(--deep-teal);
+            padding: 20px 15px 10px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #date-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Pill shape button styling */
+        button {
+            background-color: var(--mid-teal);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 20px; /* Pill shape */
+            transition: background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #138d92; /* Slightly darker mid-teal */
+        }
+
+        input[type="date"], button#today-btn {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* --- Tab Bar Styling (Mobile App feel) --- */
+        .bottom-tab {
+            display: flex;
+            justify-content: space-around;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            background-color: white;
+            border-top: 1px solid #ddd;
+            box-shadow: 0 -3px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #666;
+            transition: color 0.2s;
+        }
+
+        .tab-button.active {
+            color: var(--deep-teal);
+            border-top: 2px solid var(--mid-teal);
+            padding-top: 10px; /* Adjust padding to account for border */
+        }
+
+        /* --- Checklist & List Items --- */
+        #checklist-view, #history-view, #settings-view {
+            padding-bottom: 80px; /* Ensure content clears the bottom tab bar */
+        }
+
+        .item-list-container, .history-list-container {
+            margin-top: 15px;
+        }
+
+        /* Individual checklist item structure */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Checkbox/Circle */
+        .item-checkbox {
+            width: 24px;
+            height: 24px;
+            background-color: var(--mid-teal);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0; /* Prevents shrinking */
+        }
+
+        .item-checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 16px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.2s ease-out;
+        }
+
+        /* Item Text Styling */
+        .item-name {
+            flex-grow: 1;
+            line-height: 1.4;
+            font-size: 1rem;
+            word-break: break-word;
+        }
+
+        /* Strike through and visual mark when checked */
+        .checked .item-name {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        /* The container that tracks the state changes will apply the 'checked' class */
+        .item-row[data-checked="true"] .item-name {
+             text-decoration: line-through;
+             color: #999;
+        }
+
+
+        /* Delete Button Styling (for item/history) */
+        .delete-btn, .remove-btn {
+            background-color: var(--coral);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .delete-btn:hover, .remove-btn:hover {
+            opacity: 1;
+        }
+        
+        /* Bottom Add Item Row */
+        #add-item-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #new-item-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            font-size: 1rem;
+        }
+
+        /* --- Progress Indicator --- */
+        #progress {
+            background-color: var(--light-aqua);
+            padding: 8px;
+            margin: 20px 0 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--deep-teal);
+        }
+
+        /* --- History View Specifics --- */
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+             background-color: var(--light-aqua);
+        }
+
+        .history-date {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-right: 10px;
+            flex-basis: 25%;
+        }
+
+        .history-meta {
+             display: flex;
+             align-items: center;
+         }
+
+        /* --- Settings View Specifics --- */
+        #settings-view h3 {
+            border-bottom: 1px dashed var(--mid-teal);
+            padding-bottom: 5px;
+            margin-top: 20px;
+            color: var(--deep-teal);
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+
+    </style>
+</head>
+
+<body>
+<div class="app-container">
+    <header class="header">
+        <h1 class="header-title">YMCA Checklist</h1>
+        <!-- Decorative SVG Wave -->
+        <svg class="wave-svg" viewBox="0 0 100% 100%" preserveAspectRatio="none"></svg>
+
+        <!-- Date Picker Controls -->
+        <div id="date-controls">
+            <input type="date" id="checklist-date">
+            <button id="today-btn">Today</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- View Containers (Tabs) -->
+        <section id="view-content">
+            <div id="history-view-content" class="view-pane">
+                <h2>🎒 History</h2>
+                <div class="history-list-container" id="history-list">
+                    <!-- History items will be injected here -->
+                </div>
+            </div>
+
+            <div id="checklist-view-content" class="view-pane">
+                <div id="progress">Progress: 0 of 0 packed</div>
+                <h2>🧺 Checklist for <span id="current-date-display"></span></h2>
+                
+                <!-- Checklist Items -->
+                <div class="item-list-container" id="checklist-items">
+                    <!-- Dynamic items injected here -->
+                </div>
+
+                <!-- Add Item Row -->
+                <div id="add-item-row">
+                    <input type="text" id="new-item-input" placeholder="Add a new item (e.g., book)...">
+                    <button id="add-item-btn">Add</button>
+                </div>
+
+            </div>
+
+            <div id="settings-view-content" class="view-pane" style="display: none;">
+                <h2>⚙️ Settings</h2>
+                <p>Manage the default list of items used for new checklists.</p>
+                <div id="default-item-list">
+                    <!-- Default items will be injected here -->
+                </div>
+                 <div class="setting-item" style="margin-top: 20px;">
+                    <input type="text" id="new-default-name" placeholder="New item name">
+                    <button id="add-default-btn">Add to Defaults</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Tab Bar -->
+    <div class="bottom-tab">
+        <button class="tab-button active" data-view="checklist">Checklist</button>
+        <button class="tab-button" data-view="history">History</button>
+        <button class="tab-button" data-view="settings">Settings</button>
+    </div>
+
+</div>
+
+<script>
+    // ===============================================================
+    // 1. CONSTANTS & INITIAL STATE
+    // ===============================================================
+    const STORAGE_KEYS = {
+        DEFAULTS: "ymcaChecklist:defaults",
+        TRIP_PREFIX: "ymcaChecklist:trip:",
+    };
+
+    // Default items list (seed data)
+    const SEED_ITEMS = [
+        "Towel", 
+        "Change of clothes", 
+        "Soap", 
+        "Shampoo & conditioner", 
+        "Loofah", 
+        "Toothbrush & toothpaste", 
+        "Flip-flops", 
+        "Deodorant", 
+        "Padlock for locker", 
+        "Water bottle"
+    ];
+
+    // Global State Variables
+    let currentState = {
+        currentDate: null, // YYYY-MM-DD format
+        tripData: [],     // Items for the current date's checklist
+        defaults: []      // The master template list of items
+    };
+
+
+    // ===============================================================
+    // 2. UTILITIES & DATA HANDLING
+    // ===============================================================
+
+    /** Generates a unique ID, falling back to a random string if crypto is unavailable. */
+    const generateId = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        // Fallback: simple timestamp + random number based string
+        return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    };
+
+    /** Loads data from localStorage or seeds it if missing/empty. */
+    const initializeData = () => {
+        // Load Defaults (Seed if absent)
+        let storedDefaults = localStorage.getItem(STORAGE_KEYS.DEFAULTS);
+        if (storedDefaults) {
+            currentState.defaults = JSON.parse(storedDefaults);
+        } else {
+            currentState.defaults = SEED_ITEMS.map((name, index) => ({ 
+                id: generateId(), // Give initial IDs even for seed data
+                name: name 
+            }));
+            saveDefaults();
+        }
+
+        // Set default date to today and load initial trip state
+        const today = new Date().toISOString().split('T')[0];
+        currentState.currentDate = today;
+    };
+
+    /** Saves the defaults list to localStorage. */
+    const saveDefaults = () => {
+        localStorage.setItem(STORAGE_KEYS.DEFAULTS, JSON.stringify(currentState.defaults));
+    };
+
+    /** Loads or initializes a trip for a given date. @param {string} dateString - YYYY-MM-DD format. */
+    const loadTripForDate = (dateString) => {
+        // 1. Check if the trip exists in local storage
+        let storedTrip = localStorage.getItem(STORAGE_KEYS.TRIP_PREFIX + dateString);
+
+        if (storedTrip) {
+            // Trip found, load it
+            const tripData = JSON.parse(storedTrip);
+            currentState.tripData = tripData.items; 
+        } else {
+            // No stored trip, create a new one using defaults (all unchecked)
+            currentState.tripData = currentState.defaults.map(item => ({
+                id: item.id,
+                name: item.name,
+                checked: false
+            }));
+        }
+
+        // Update state date and save the empty/loaded trip immediately
+        currentState.currentDate = dateString;
+        saveTripToStorage(); 
+    };
+
+
+    /** Saves the current checklist data for the active date to localStorage. */
+    const saveTripToStorage = () => {
+        if (!currentState.currentDate) return;
+
+        const newTripData = {
+            date: currentState.currentDate,
+            items: currentState.tripData
+        };
+
+        localStorage.setItem(STORAGE_KEYS.TRIP_PREFIX + currentState.currentDate, JSON.stringify(newTripData));
+    };
+
+    /** Cleans up and removes a trip from localStorage. */
+    const deleteTripFromStorage = (dateString) => {
+        localStorage.removeItem(STORAGE_KEYS.TRIP_PREFIX + dateString);
+    };
+
+
+    // ===============================================================
+    // 3. UI RENDERING & EVENT HANDLERS
+    // ===============================================================
+
+    /** Updates the DOM to reflect current progress and displayed items. */
+    const updateChecklistUI = () => {
+        const container = document.getElementById('checklist-items');
+        container.innerHTML = ''; // Clear old content
+        document.getElementById('current-date-display').textContent = currentState.currentDate;
+
+        if (currentState.tripData.length === 0) {
+            container.innerHTML = '<p style="text-align: center; margin-top: 30px; color: #999;">Your checklist is empty. Add items using the input field below.</p>';
+        } else {
+             currentState.tripData.forEach((item, index) => {
+                const itemWrapper = document.createElement('div');
+                itemWrapper.className = `checklist-item ${item.checked ? 'checked' : ''}`;
+                itemWrapper.setAttribute('data-id', item.id);
+                itemWrapper.setAttribute('data-checked', item.checked);
+                itemWrapper.dataset.index = index; // Useful for quick access
+
+                itemWrapper.innerHTML = `
+                    <div class="item-checkbox"></div>
+                    <span class="item-name">${item.name}</span>
+                    <button class="delete-btn" data-id="${item.id}">Delete</button>
+                `;
+                container.appendChild(itemWrapper);
+            });
+        }
+
+        updateProgressIndicator();
+    };
+
+    /** Updates the "X of Y packed" progress display. */
+    const updateProgressIndicator = () => {
+        const total = currentState.tripData.length;
+        const checked = currentState.tripData.filter(item => item.checked).length;
+        document.getElementById('progress').textContent = `Progress: ${checked} of ${total} packed`;
+    };
+
+    /** Attaches all necessary event listeners to the checklist view (checkbox click, delete button). */
+    const attachChecklistListeners = () => {
+        // 1. Item Checkbox/Row Toggle
+        document.getElementById('checklist-items').addEventListener('click', (e) => {
+            let targetElement = e.target.closest('.checklist-item');
+            if (!targetElement || e.target.closest('.delete-btn')) return; // Ignore if clicking delete
+
+            const index = parseInt(targetElement.dataset.index);
+            if (isNaN(index)) return;
+
+            // Toggle state logic
+            currentState.tripData[index].checked = !currentState.tripData[index].checked;
+            e.currentTarget.querySelector('.item-checkbox').style.setProperty('opacity', 1); // Visually check the box
+            targetElement.classList.toggle('checked');
+
+            // Autosave and UI update
+            saveTripToStorage();
+            updateProgressIndicator();
+        });
+
+        // 2. Delete Item Button Listener
+        document.getElementById('checklist-items').addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const btn = e.target;
+                // Find the parent item container to get index/id context, since deletion is relative.
+                let targetItem = btn.closest('.checklist-item');
+                const indexToDelete = parseInt(targetItem.dataset.index);
+
+                if (!confirm("Are you sure you want to delete this checklist item for today's trip?")) {
+                    return;
+                }
+
+                // Remove item from state and array
+                currentState.tripData.splice(indexToDelete, 1);
+
+                // Update UI and save
+                updateChecklistUI();
+                saveTripToStorage();
+            }
+        });
+    };
+
+
+    /** Handles adding a new item to the current checklist only. */
+    const handleAddItem = (e) => {
+        if (!e.target.id || e.target.id !== 'add-item-btn') return;
+
+        // Prevent form submission if contained within one
+        e.preventDefault(); 
+
+        const input = document.getElementById('new-item-input');
+        const name = input.value.trim();
+
+        if (name) {
+            const newItem = {
+                id: generateId(),
+                name: name,
+                checked: false
+            };
+
+            currentState.tripData.push(newItem);
+            updateChecklistUI(); // Rerender checklist view to include new item
+            saveTripToStorage(); 
+
+            input.value = ''; // Clear input field
+        }
+    };
+
+
+    /** Updates the history list UI and attaches listeners for navigation/deletion. */
+    const updateHistoryView = () => {
+        const historyListContainer = document.getElementById('history-list');
+        historyListContainer.innerHTML = '';
+
+        // 1. Get all trip keys from localStorage
+        let keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith(STORAGE_KEYS.TRIP_PREFIX)) {
+                keys.push(key);
+            }
+        }
+
+        // 2. Process keys: convert to object structure for sorting/display
+        const tripObjects = keys.map(key => {
+             try {
+                const data = JSON.parse(localStorage.getItem(key));
+                return { date: data.date, items: data.items };
+            } catch (e) {
+                console.error("Could not parse stored trip:", key);
+                return null;
+            }
+        }).filter(Boolean);
+
+        // 3. Sort by date, newest first
+        tripObjects.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+
+        if (tripObjects.length === 0) {
+            historyListContainer.innerHTML = '<p style="text-align: center; margin-top: 30px; color: #999;">No trip history saved yet.</p>';
+            return;
+        }
+
+        // 4. Render list and attach listeners
+        tripObjects.forEach(trip => {
+            const count = trip.items.filter(item => item.checked).length;
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.dataset.date = trip.date;
+
+            historyItem.innerHTML = `
+                <span class="history-date">${trip.date}</span>
+                <div class="history-meta">
+                    <span>${count} / ${trip.items.length} packed</span>
+                    <button class="delete-btn remove-btn" data-date="${trip.date}">Delete</button>
+                </div>
+            `;
+            historyListContainer.appendChild(historyItem);
+        });
+
+        // 5. Attach Listeners: Tap to view, Button click to delete
+        const historyViewPane = document.getElementById('history-view-content');
+        
+        // Click listener for viewing a trip (on the whole container)
+        historyListContainer.addEventListener('click', (e) => {
+            if (!e.target.closest('.delete-btn')) {
+                const targetItem = e.target.closest('.history-item');
+                if (targetItem) {
+                    const dateToView = targetItem.dataset.date;
+                    // Change view to the specific historical date and load data
+                    setCurrentDateAndLoad(dateToView); 
+                }
+            }
+        });
+
+        // Delete Listener
+        historyListContainer.addEventListener('click', (e) => {
+             if (e.target.classList.contains('remove-btn')) {
+                const dateToDelete = e.target.dataset.date;
+                 if (confirm(`Are you sure you want to delete the entire trip history for ${dateToDelete}? This action cannot be undone.`)) {
+                    deleteTripFromStorage(dateToDelete);
+                    updateHistoryView(); // Refresh list after deletion
+                }
+            }
+        });
+    };
+
+    /** Updates the settings panel UI and attaches listeners. */
+    const updateSettingsView = () => {
+        const container = document.getElementById('default-item-list');
+        container.innerHTML = '';
+
+        if (currentState.defaults.length === 0) {
+            container.innerHTML = '<p style="text-align: center; margin-top: 30px; color: #999;">The default checklist is empty.</p>';
+            return;
+        }
+        
+        currentState.defaults.forEach((item, index) => {
+            const settingItem = document.createElement('div');
+            settingItem.className = 'setting-item';
+            settingItem.innerHTML = `
+                <span>${index + 1}. ${item.name}</span>
+                <button class="delete-btn remove-btn" data-index="${index}" style="padding: 5px;">Remove</button>
+            `;
+            container.appendChild(settingItem);
+        });
+
+        // Attach Delete Listeners for Defaults
+         document.getElementById('default-item-list').addEventListener('click', (e) => {
+             if (e.target.classList.contains('remove-btn')) {
+                const indexToRemove = parseInt(e.target.dataset.index);
+                 if (confirm("Are you sure you want to remove this item from the default checklist? This will NOT affect any saved trips.")) {
+                    currentState.defaults.splice(indexToRemove, 1);
+                    saveDefaults();
+                    updateSettingsView(); // Re-render list
+                }
+            }
+        });
+    };
+
+    /** Switches the view and triggers necessary data loads/renders. */
+    const switchView = (viewName) => {
+        // Hide all views
+        document.querySelectorAll('.view-pane').forEach(el => el.style.display = 'none');
+
+        // Show the target view
+        const activeView = document.getElementById(`${viewName}-content`);
+        if (activeView) {
+            activeView.style.display = 'block';
+        }
+
+        // Update tab button active state
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.tab-button[data-view="${viewName}"]`).classList.add('active');
+    };
+
+
+    /** Central function to set the date and load/render data for that date. */
+    const setCurrentDateAndLoad = (dateString) => {
+         if (!dateString) return;
+
+        // Update internal state
+        currentState.currentDate = dateString;
+
+        // Load or create trip data associated with this date
+        loadTripForDate(dateString); 
+
+        // Re-render the checklist view components
+        updateChecklistUI();
+        
+        // Switch to checklist tab and refresh history/settings if needed, but focus is on checklist
+        switchView('checklist');
+    };
+
+
+    /** Initialization sequence: Runs when the script loads. */
+    const init = () => {
+        initializeData();
+
+        // Set up Event Listeners for controls
+        document.getElementById('today-btn').addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            setCurrentDateAndLoad(today);
+        });
+
+        document.getElementById('checklist-date').addEventListener('change', (e) => {
+            const selectedDate = e.target.value;
+            if (selectedDate) {
+                setCurrentDateAndLoad(selectedDate);
+            }
+        });
+        
+        // View/Tab Switching Logic
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const view = e.currentTarget.dataset.view;
+                switchView(view);
+            });
+        });
+
+        // Add Item Button Listener (must bind after initial render/setup)
+        document.getElementById('add-item-btn').addEventListener('click', handleAddItem);
+
+
+        // Initial Render Calls (These happen in order for correct dependencies):
+        updateHistoryView(); 
+        updateSettingsView();
+        setCurrentDateAndLoad(currentState.currentDate); // Load the initial date's data
+    };
+
+    // Execute initialization
+    document.addEventListener('DOMContentLoaded', init);
+
+</script>
+<task_progress>
+- [x] Create the basic index.html file structure and integrate necessary fonts/CSS variables.
+- [x] Implement mobile-first design components (Header, Tab Bar, Content area) using the specified beachy color palette.
+- [x] Set up core JavaScript utilities for localStorage management (loading/saving default items and trip data).
+- [x] Implement the Checklist View logic: rendering items, handling checkbox clicks (strike-through effect), calculating progress, and adding new items to the current trip.
+- [x] Implement Date Picker functionality: loading saved trips or seeding new ones when the date changes.
+- [x] Implement History View/Tab: listing all stored trips, displaying counts, and handling trip deletion with confirmation.
+- [x] Implement Settings Panel: interface for adding and removing items from the DEFAULT checklist template without affecting existing saved trips.
+- [x] Finalize structure by wiring up *all* event listeners across views (Checklist, History, Settings) to ensure full interactivity and compliance with all provided rules.
+</task_progress>
+</write_to_file>
+<task_progress>
+- [x] Create the basic index.html file structure and integrate necessary fonts/CSS variables.
+- [x] Implement mobile-first design components (Header, Tab Bar, Content area) using the specified beachy color palette.
+- [x] Set up core JavaScript utilities for localStorage management (loading/saving default items and trip data).
+- [x] Implement the Checklist View logic: rendering items, handling checkbox clicks (strike-through effect), calculating progress, and adding new items to the current trip.
+- [x] Implement Date Picker functionality: loading saved trips or seeding new ones when the date changes.
+- [x] Implement History View/Tab: listing all stored trips, displaying counts, and handling trip deletion with confirmation.
+- [x] Implement Settings Panel: interface for adding and removing items from the DEFAULT checklist template without affecting existing saved trips.
+- [x] Finalize structure by wiring up *all* event listeners across views (Checklist, History, Settings) to ensure full interactivity and compliance with all provided rules.
+</task_progress>
+</attempt_completion>
