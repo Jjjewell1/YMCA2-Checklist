@@ -76,3 +76,24 @@ Run through this list explicitly before finishing — don't skip it because the 
 "When using Ollama, always assume OLLAMA_FLASH_ATTENTION=1 is enabled and use a num_ctx of 16384 for all operations to ensure stability with my 32GB RAM limit."
 
 
+## 11. Editing existing files
+- Before using replace_in_file, re-read the current file content — 
+  never assume you remember it correctly from earlier in the 
+  conversation.
+- If a replace_in_file SEARCH block fails to match, do not retry blindly 
+  — re-read the file first, then either fix the SEARCH block or fall 
+  back to rewriting the whole file.
+
+  ## 12. Reading files before editing
+
+- Never ask the user to paste file content — you have direct file 
+  read access. Use it.
+- Before any replace_in_file or edit, always read the current file 
+  yourself first. Do not rely on memory of what a file "should" 
+  contain from earlier in the conversation.
+- If a replace_in_file SEARCH block fails to match, re-read the file 
+  immediately, then either correct the SEARCH block or fall back to 
+  rewriting the whole file. Do not retry the same failed SEARCH block 
+  twice.
+- If you are unsure a file exists or what it contains, check with your 
+  own tools before asking the user anything.
