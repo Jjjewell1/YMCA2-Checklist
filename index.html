@@ -585,6 +585,12 @@
             // Set up event listeners
             setupEventListeners();
             
+            // Ensure today's trip exists (create from defaults if needed)
+            const todayKey = formatDate(currentDate);
+            if (!tripData[todayKey]) {
+                createTripFromDefaults(todayKey);
+            }
+            
             // Render initial view
             renderCurrentDate();
             updateProgress();
@@ -1060,7 +1066,14 @@
         }
 
         // Initialize the app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initApp);
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            // Ensure today's trip exists with default items if it doesn't exist
+            const todayKey = formatDate(currentDate);
+            if (!tripData[todayKey]) {
+                createTripFromDefaults(todayKey);
+            }
+        });
     </script>
 </body>
 </html>
